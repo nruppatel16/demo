@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>7-Day Weather</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(160deg, #0f0c29 0%, #1a1a4e 50%, #24243e 100%);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px 48px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 30px;
+    }
+
+    /* ---- search ---- */
+    .search-wrap {
+      display: flex;
+      width: 100%;
+      max-width: 460px;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .search-wrap input {
+      flex: 1;
+      padding: 15px 18px;
+      border-radius: 16px;
+      border: 1.5px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-wrap input::placeholder { color: rgba(255,255,255,0.35); }
+    .search-wrap input:focus { border-color: rgba(100,160,255,0.5); }
+
+    .search-wrap button {
+      padding: 15px 22px;
+      border-radius: 16px;
+      border: none;
+      background: linear-gradient(135deg, #4f8ef7, #7b5ea7);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .search-wrap button:active { opacity: 0.85; transform: scale(0.97); }
+
+    /* ---- unit toggle ---- */
+    .unit-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .unit-btn {
+      padding: 7px 18px;
+      border-radius: 22px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      background: transparent;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .unit-btn.active {
+      background: rgba(79,142,247,0.25);
+      border-color: #4f8ef7;
+      color: #fff;
+    }
+
+    /* ---- city label ---- */
+    #city-label {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 18px;
+      text-align: center;
+      min-height: 1.4rem;
+    }
+
+    /* ---- error ---- */
+    #error-box {
+      background: rgba(255,70,70,0.15);
+      border: 1px solid rgba(255,80,80,0.35);
+      color: #ff9898;
+      border-radius: 14px;
+      padding: 13px 20px;
+      font-size: 0.9rem;
+      max-width: 460px;
+      width: 100%;
+      text-align: center;
+      display: none;
+      margin-bottom: 18px;
+    }
+
+    /* ---- spinner ---- */
+    .spinner {
+      display: none;
+      width: 38px; height: 38px;
+      border: 3.5px solid rgba(255,255,255,0.12);
+      border-top-color: #4f8ef7;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- forecast cards ---- */
+    .grid {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 20px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      backdrop-filter: blur(12px);
+    }
+
+    .card.today {
+      background: linear-gradient(120deg, rgba(79,142,247,0.22), rgba(123,94,167,0.18));
+      border-color: rgba(79,142,247,0.35);
+    }
+
+    .card-icon { font-size: 2.6rem; flex-shrink: 0; line-height: 1; }
+
+    .card-mid { flex: 1; min-width: 0; }
+
+    .card-day { font-weight: 700; font-size: 1rem; }
+    .card-date { font-size: 0.72rem; color: rgba(255,255,255,0.45); margin-top: 1px; }
+    .card-desc { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 5px; }
+
+    .card-chips {
+      display: flex; gap: 7px; margin-top: 7px; flex-wrap: wrap;
+    }
+
+    .chip {
+      display: flex; align-items: center; gap: 3px;
+      font-size: 0.7rem; color: rgba(255,255,255,0.55);
+      background: rgba(255,255,255,0.07);
+      padding: 3px 9px; border-radius: 20px;
+    }
+
+    .card-temps { text-align: right; flex-shrink: 0; }
+    .temp-hi { font-size: 1.45rem; font-weight: 800; }
+    .temp-lo { font-size: 0.82rem; color: rgba(255,255,255,0.45); margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <h1>🌤 Weather</h1>
+  <p class="subtitle">7-day forecast · anywhere</p>
+
+  <div class="search-wrap">
+    <input id="inp" type="text" placeholder="Enter city name…" autocomplete="off" />
+    <button onclick="search()">Go</button>
+  </div>
+
+  <div class="unit-row">
+    <button class="unit-btn active" id="btnC" onclick="setUnit('C')">°C</button>
+    <button class="unit-btn"        id="btnF" onclick="setUnit('F')">°F</button>
+  </div>
+
+  <div id="city-label"></div>
+  <div id="error-box"></div>
+  <div class="spinner" id="spin"></div>
+  <div class="grid" id="grid"></div>
+
+<script>
+const WMO = {
+  0:["Clear Sky","☀️"], 1:["Mainly Clear","🌤️"], 2:["Partly Cloudy","⛅"],
+  3:["Overcast","☁️"], 45:["Foggy","🌫️"], 48:["Icy Fog","🌫️"],
+  51:["Light Drizzle","🌦️"], 53:["Drizzle","🌦️"], 55:["Heavy Drizzle","🌧️"],
+  61:["Light Rain","🌧️"], 63:["Rain","🌧️"], 65:["Heavy Rain","🌧️"],
+  71:["Light Snow","❄️"], 73:["Snow","❄️"], 75:["Heavy Snow","❄️"],
+  77:["Snow Grains","❄️"], 80:["Rain Showers","🌦️"], 81:["Rain Showers","🌦️"],
+  82:["Violent Showers","⛈️"], 85:["Snow Showers","🌨️"], 86:["Heavy Snow Showers","🌨️"],
+  95:["Thunderstorm","⛈️"], 96:["Thunderstorm+Hail","⛈️"], 99:["Thunderstorm+Hail","⛈️"]
+};
+
+let unit = 'C';
+let cache = null;
+
+function setUnit(u) {
+  unit = u;
+  document.getElementById('btnC').classList.toggle('active', u==='C');
+  document.getElementById('btnF').classList.toggle('active', u==='F');
+  if (cache) renderDays(cache);
+}
+
+function toF(c) { return Math.round(c * 9/5 + 32); }
+function fmt(c) { return unit==='C' ? `${Math.round(c)}°C` : `${toF(c)}°F`; }
+
+function showError(msg) {
+  const b = document.getElementById('error-box');
+  b.textContent = msg;
+  b.style.display = 'block';
+}
+
+function setLoading(on) {
+  document.getElementById('spin').style.display = on ? 'block' : 'none';
+}
+
+async function search() {
+  const city = document.getElementById('inp').value.trim();
+  if (!city) return;
+
+  document.getElementById('grid').innerHTML = '';
+  document.getElementById('city-label').textContent = '';
+  document.getElementById('error-box').style.display = 'none';
+  setLoading(true);
+
+  try {
+    // 1. Geocode
+    const geoResp = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`
+    );
+    const geo = await geoResp.json();
+
+    if (!geo.results?.length) {
+      setLoading(false);
+      showError(`City "${city}" not found. Try a different spelling.`);
+      return;
+    }
+
+    const { latitude: lat, longitude: lon, name, country } = geo.results[0];
+    const displayName = country ? `${name}, ${country}` : name;
+
+    // 2. Forecast
+    const fResp = await fetch(
+      `https://api.open-meteo.com/v1/forecast` +
+      `?latitude=${lat}&longitude=${lon}` +
+      `&daily=weathercode,temperature_2m_max,temperature_2m_min,` +
+      `precipitation_sum,windspeed_10m_max,precipitation_probability_max` +
+      `&timezone=auto&forecast_days=7`
+    );
+    const fData = await fResp.json();
+    const d = fData.daily;
+
+    const days = d.time.map((dateStr, i) => {
+      const date = new Date(dateStr + 'T12:00:00');
+      const dow = date.toLocaleDateString('en-US', { weekday: 'long' });
+      const label = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : dow;
+      const dateLabel = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const code = d.weathercode[i];
+      const [desc, icon] = WMO[code] ?? ['Unknown', '🌡️'];
+      return {
+        label, dateLabel, desc, icon,
+        high: d.temperature_2m_max[i],
+        low:  d.temperature_2m_min[i],
+        rainMm:  d.precipitation_sum[i],
+        rainPct: d.precipitation_probability_max[i],
+        wind: d.windspeed_10m_max[i],
+      };
+    });
+
+    setLoading(false);
+    document.getElementById('city-label').textContent = '📍 ' + displayName;
+    cache = days;
+    renderDays(days);
+
+  } catch (e) {
+    setLoading(false);
+    showError('Network error. Make sure you have internet access.');
+  }
+}
+
+function renderDays(days) {
+  document.getElementById('grid').innerHTML = days.map((d, i) => `
+    <div class="card ${i===0?'today':''}">
+      <div class="card-icon">${d.icon}</div>
+      <div class="card-mid">
+        <div class="card-day">${d.label}</div>
+        <div class="card-date">${d.dateLabel}</div>
+        <div class="card-desc">${d.desc}</div>
+        <div class="card-chips">
+          <span class="chip">💧 ${d.rainPct ?? '—'}%</span>
+          <span class="chip">🌧 ${d.rainMm.toFixed(1)} mm</span>
+          <span class="chip">💨 ${Math.round(d.wind)} km/h</span>
+        </div>
+      </div>
+      <div class="card-temps">
+        <div class="temp-hi">${fmt(d.high)}</div>
+        <div class="temp-lo">${fmt(d.low)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('inp').addEventListener('keydown', e => {
+  if (e.key === 'Enter') search();
+});
+</script>
+</body>
+</html>
