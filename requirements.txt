@@ -1,0 +1,9 @@
+# --- Phase 1 runtime deps (lean; each justified in README) ---
+alpaca-py>=0.43,<0.44       # official Alpaca SDK: paper broker + market data
+pydantic-settings>=2.0,<3   # typed config loaded from .env
+pandas>=2.0                 # bar/time-series handling (also an alpaca-py dep)
+duckdb>=1.0                 # local market-data + history cache
+structlog>=24.0             # structured logging
+
+# --- Dev / test ---
+pytest>=8.0
